@@ -1,79 +1,71 @@
 #include<stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-int Total_Count=0;
-int End_Word_Count=0;
-
+int i=0;
 //Creating Structure
-struct Struct_Keywords
+struct Keyword_Struct
 {
-	char KeyWords[25];
+	char *KeyWords;
 	int Rep_Count;
 };
-//Function to Initialise Table:
-void init_table(struct Struct_Keywords KeyWords_Array[], char KeyWords[])
+void init_table(struct Keyword_Struct ** KeyWords_Array, char ** argv, int size)
 {
-	int i = 0;
-	for(i=0; i<Total_Count;++i)
+	for(i=0; i < size; i++)
 	{
-		if(!strcmp(KeyWords_Array[i].KeyWords,KeyWords))
-		{
-			KeyWords_Array[i].Rep_Count+=1;
-		}
+		KeyWords_Array[i] = malloc(sizeof(struct Keyword_Struct));
+		KeyWords_Array[i] ->KeyWords = argv[i+1];
+		KeyWords_Array[i] -> Rep_Count = 0;
 	}
-	if(End_Word_Count==0)
-	{
-		strcpy(KeyWords_Array[Total_Count].KeyWords, KeyWords);
-		KeyWords_Array[Total_Count].Rep_Count=0;
-		Total_Count+=1;
-	}
-
 }
-//Displaying Similar keyWord Count##
-void display_table(struct Struct_Keywords KeyWords_Array[])
+void Split_Words(char * str, struct Keyword_Struct **KeyWords_Array, int size)
 {
-	for(int i=0;i<Total_Count;++i)
+	char Delim[]=" ";
+		char * InputMessage_Words = strtok(str, Delim);
+
+		while(InputMessage_Words != NULL)
+		{
+			for(i=0; i < size-1; i++)
+			{
+				if(strcmp(InputMessage_Words, KeyWords_Array[i]->KeyWords)==0)
+				{
+					KeyWords_Array[i]->Rep_Count += 1;
+				}
+			}
+			InputMessage_Words = strtok(NULL, Delim);
+		}
+}
+void Display_Count(struct Keyword_Struct** KeyWords_Array, int size)
+{
+
+	for(i=0;i<size-1;i++)
 	{
-		printf("%s:%d\n", KeyWords_Array[i].KeyWords, KeyWords_Array[i].Rep_Count);
+		printf("%s:%d\n", KeyWords_Array[i]->KeyWords, KeyWords_Array[i]->Rep_Count);
 	}	
 
 }
-//Main Method
-int main(int argc, char *argv[])
+//Main Method, Program starts here
+int main(int argc, char **argv)
 {
-	//initial WordCount
-		struct Struct_Keywords KeyWords_Array[100];
+	
 	//Initialize Loop Variable
-	int i;
-	//Initializing Variable to store Words from the message.
-	char *InputMessage_Words;
-	for (int i=1;i<argc;++i)
+	int i=0;
+	char *line;
+	size_t size = 40, getLine = 0; 
+	line =(char * ) malloc(size);
+	char ** lptr =&line;
+	struct Keyword_Struct * KeyWords_Array[argc - 1];
+	init_table(KeyWords_Array, argv, argc);
+	while(1)
 	{
-		init_table(KeyWords_Array, argv[i]);
+		getLine = getline(lptr, &size, stdin);
+		line[strlen(line) -1] = '\0';
+		Split_Words(line, KeyWords_Array, argc);
+		if (feof(stdin))
+		{
+      		free(line);
+      		break;
+    	}
 	}
-	End_Word_Count=1;
-	char *InputMessage;
-	char Words[25];
-	size_t len = 248;
-	int bytes_read = 0;
-	InputMessage = (char *) malloc(sizeof(char) * len);
-	printf("Enter Message to search for Similar Words: ");
-
-	//Input Message Using GetLine KeyWord
-
-	getline(&InputMessage, &len, stdin);
-	InputMessage_Words = strtok(InputMessage, " ");
-
-	//iterating through Message if it is not NULL and calling init_Table Function.
-
-	while(InputMessage_Words != NULL)
-	{
-		init_table(KeyWords_Array,InputMessage_Words);
-		InputMessage_Words = strtok(NULL, " ");
-	}
-	//Calling Display function to Printout Similar words count.
-	display_table(KeyWords_Array);
-
+	Display_Count(KeyWords_Array, argc);
+	return 0;
 }
-
